@@ -1,7 +1,13 @@
 import { User, NewUser, UpdateUser } from '../db/schema'
 
 // 사용자 관련 타입
-export { User, NewUser, UpdateUser }
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+  GUEST = 'GUEST'
+}
+
+export type { User, NewUser, UpdateUser, SleepRecord, NewSleepRecord, UpdateSleepRecord, SleepGoal, NewSleepGoal, UpdateSleepGoal } from '../db/schema'
 
 // API 응답 타입
 export interface ApiResponse<T = any> {
@@ -19,17 +25,11 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   totalPages: number
 }
 
-// 사용자 역할 타입
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  GUEST = 'GUEST'
-}
-
 // 사용자 생성 DTO
 export interface CreateUserDto {
   name: string
   email: string
+  password: string
   role?: UserRole
 }
 
@@ -37,5 +37,23 @@ export interface CreateUserDto {
 export interface UpdateUserDto {
   name?: string
   email?: string
+  password?: string
   role?: UserRole
+}
+
+export interface LoginDto {
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  user: {
+    id: number
+    name: string
+    email: string
+    role: UserRole
+    createdAt: string
+    updatedAt: string
+  }
+  token: string
 }

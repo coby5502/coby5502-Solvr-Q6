@@ -1,19 +1,34 @@
 import { ApiResponse, PaginatedResponse } from '../types'
 
+export interface SuccessResponse<T = any> {
+  success: true
+  data: T
+  message?: string
+}
+
+export interface ErrorResponse {
+  success: false
+  error: string
+  details?: any
+}
+
+export type ApiResponse<T = any> = SuccessResponse<T> | ErrorResponse
+
 // 성공 응답 생성 함수
-export function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
+export function createSuccessResponse<T>(data: T, message?: string): SuccessResponse<T> {
   return {
     success: true,
     data,
-    message
+    ...(message && { message })
   }
 }
 
 // 에러 응답 생성 함수
-export function createErrorResponse(error: string): ApiResponse {
+export function createErrorResponse(error: string, details?: any): ErrorResponse {
   return {
     success: false,
-    error
+    error,
+    ...(details && { details })
   }
 }
 
@@ -34,6 +49,14 @@ export function createPaginatedResponse<T>(
     limit,
     totalPages
   }
+}
+
+export function isSuccessResponse<T>(response: ApiResponse<T>): response is SuccessResponse<T> {
+  return response.success === true
+}
+
+export function isErrorResponse(response: ApiResponse): response is ErrorResponse {
+  return response.success === false
 }
 
 export default {

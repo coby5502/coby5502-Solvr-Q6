@@ -1,55 +1,88 @@
 // server/src/services/userService.ts
 import { eq } from 'drizzle-orm'
 import { users } from '../db/schema'
-import { CreateUserDto, UpdateUserDto, User } from '../types'
+import { CreateUserDto, UpdateUserDto, User, UserRole } from '../types'
 import { Database } from '../types/database'
+import bcrypt from 'bcrypt'
+import { db } from '../db'
 
 type UserServiceDeps = {
   db: Database
 }
 
+const mapDbUserToUser = (dbUser: any): User => ({
+  ...dbUser,
+  role: dbUser.role as UserRole
+})
+
 export const createUserService = ({ db }: UserServiceDeps) => {
   const getAllUsers = async (): Promise<User[]> => {
-    return db.select().from(users)
+    const results = await db.select().from(users)
+    return results.map(mapDbUserToUser)
   }
 
-  const getUserById = async (id: number): Promise<User | undefined> => {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1)
-    return result[0]
+  const getUserById = async (id: number): Promise<User | null> => {
+    const [result] = await db.select().from(users).where(eq(users.id, id))
+    return result ? mapDbUserToUser(result) : null
   }
 
-  const getUserByEmail = async (email: string): Promise<User | undefined> => {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1)
-    return result[0]
+  const getUserByEmail = async (email: string): Promise<User | null> => {
+    const [result] = await db.select().from(users).where(eq(users.email, email))
+    return result ? mapDbUserToUser(result) : null
   }
 
-  const createUser = async (userData: CreateUserDto): Promise<User> => {
+  const createUser = async (data: CreateUserDto): Promise<User> => {
+    const { email, password, name } = data
+    const password_hash = await bcrypt.hash(password, 10)
     const now = new Date().toISOString()
-    const newUser = {
-      ...userData,
-      createdAt: now,
-      updatedAt: now
+
+    const [user] = await db.insert(users)
+      .values({
+        email,
+        name,
+        password_hash,
+        createdAt: now,
+        updatedAt: now,
+        role: 'USER'
+      })
+      .returning()
+
+    if (!user) throw new Error('Failed to create user')
+    return mapDbUserToUser(user)
+  }
+
+  const updateUser = async (id: number, data: UpdateUserDto): Promise<User> => {
+    const updates: any = {}
+    if (data.email) updates.email = data.email
+    if (data.password) updates.password_hash = await bcrypt.hash(data.password, 10)
+    if (data.name) updates.name = data.name
+    updates.updatedAt = new Date().toISOString()
+
+    const [user] = await db.update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning()
+
+    if (!user) throw new Error('Failed to update user')
+    return mapDbUserToUser(user)
+  }
+
+  const deleteUser = async (id: number): Promise<void> => {
+    await db.delete(users).where(eq(users.id, id))
+  }
+
+  const validateUser = async (email: string, password: string): Promise<User> => {
+    const user = await getUserByEmail(email)
+    if (!user) {
+      throw new Error('Invalid email or password')
     }
 
-    const result = await db.insert(users).values(newUser).returning()
-    return result[0]
-  }
-
-  const updateUser = async (id: number, userData: UpdateUserDto): Promise<User | undefined> => {
-    const now = new Date().toISOString()
-    const updateData = {
-      ...userData,
-      updatedAt: now
+    const isValidPassword = await bcrypt.compare(password, user.password_hash)
+    if (!isValidPassword) {
+      throw new Error('Invalid email or password')
     }
 
-    const result = await db.update(users).set(updateData).where(eq(users.id, id)).returning()
-
-    return result[0]
-  }
-
-  const deleteUser = async (id: number): Promise<boolean> => {
-    const result = await db.delete(users).where(eq(users.id, id)).returning({ id: users.id })
-    return result.length > 0
+    return user
   }
 
   return {
@@ -58,8 +91,11 @@ export const createUserService = ({ db }: UserServiceDeps) => {
     getUserByEmail,
     createUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    validateUser
   }
 }
 
 export type UserService = ReturnType<typeof createUserService>
+
+export const userService = createUserService({ db })

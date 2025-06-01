@@ -1,8 +1,7 @@
 export interface User {
   id: number
-  name: string
   email: string
-  role: UserRole
+  name: string
   createdAt: string
   updatedAt: string
 }
@@ -13,14 +12,24 @@ export enum UserRole {
   GUEST = 'GUEST'
 }
 
-export interface CreateUserDto {
-  name: string
+export interface CreateUserDTO {
   email: string
-  role: UserRole
+  password: string
+  name: string
 }
 
-export interface UpdateUserDto {
-  name?: string
+export interface UpdateUserDTO {
   email?: string
-  role?: UserRole
+  name?: string
+  password?: string
+}
+
+export interface LoginDTO {
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  token: string
+  user: User
 }

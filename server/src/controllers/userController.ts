@@ -1,141 +1,134 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { createSuccessResponse, createErrorResponse } from '../utils/response'
-import { CreateUserDto, UpdateUserDto } from '../types'
-import { UserService } from '../services/userService'
+import { userService } from '../services/userService'
+import { generateToken } from '../utils/jwt'
 
-type UserControllerDeps = {
-  userService: UserService
-}
-
-export const createUserController = ({ userService }: UserControllerDeps) => {
-  const getAllUsers = async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const users = await userService.getAllUsers()
-      return reply.code(200).send(createSuccessResponse(users))
-    } catch (error) {
-      request.log.error(error)
-      return reply.code(500).send(createErrorResponse('사용자 목록을 불러오는데 실패했습니다.'))
+export const userController = {
+  async register(request: FastifyRequest<{
+    Body: {
+      email: string;
+      password: string;
+      name: string;
     }
-  }
-
-  const getUserById = async (
-    request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply
-  ) => {
+  }>, reply: FastifyReply) {
     try {
-      const id = parseInt(request.params.id, 10)
+      const { email, password, name } = request.body;
+      const user = await userService.createUser({ email, password, name });
+      const token = generateToken({ id: user.id, role: user.role });
+      
+      return reply.code(201).send({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        },
+        token
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        return reply.code(400).send({ error: error.message });
+      }
+      return reply.code(500).send({ error: 'Internal server error' });
+    }
+  },
 
-      if (isNaN(id)) {
-        return reply.code(400).send(createErrorResponse('유효하지 않은 사용자 ID입니다.'))
+  async login(request: FastifyRequest<{
+    Body: {
+      email: string;
+      password: string;
+    }
+  }>, reply: FastifyReply) {
+    try {
+      const { email, password } = request.body;
+      const user = await userService.validateUser(email, password);
+      const token = generateToken({ id: user.id, role: user.role });
+      
+      return reply.code(200).send({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        },
+        token
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        return reply.code(401).send({ error: error.message });
+      }
+      return reply.code(500).send({ error: 'Internal server error' });
+    }
+  },
+
+  async getCurrentUser(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const userId = request.user?.id;
+      if (!userId) {
+        return reply.code(401).send({ error: 'Invalid token' });
       }
 
-      const user = await userService.getUserById(id)
-
+      const user = await userService.getUserById(userId);
       if (!user) {
-        return reply.code(404).send(createErrorResponse('사용자를 찾을 수 없습니다.'))
+        return reply.code(404).send({ error: 'User not found' });
       }
 
-      return reply.code(200).send(createSuccessResponse(user))
-    } catch (error) {
-      request.log.error(error)
-      return reply.code(500).send(createErrorResponse('사용자 정보를 불러오는데 실패했습니다.'))
-    }
-  }
-
-  const createUser = async (
-    request: FastifyRequest<{ Body: CreateUserDto }>,
-    reply: FastifyReply
-  ) => {
-    try {
-      const userData = request.body
-
-      const existingUser = await userService.getUserByEmail(userData.email)
-      if (existingUser) {
-        return reply.code(409).send(createErrorResponse('이미 사용 중인 이메일입니다.'))
-      }
-
-      const newUser = await userService.createUser(userData)
-      return reply
-        .code(201)
-        .send(createSuccessResponse(newUser, '사용자가 성공적으로 생성되었습니다.'))
-    } catch (error) {
-      request.log.error(error)
-      return reply.code(500).send(createErrorResponse('사용자 생성에 실패했습니다.'))
-    }
-  }
-
-  const updateUser = async (
-    request: FastifyRequest<{ Params: { id: string }; Body: UpdateUserDto }>,
-    reply: FastifyReply
-  ) => {
-    try {
-      const id = parseInt(request.params.id, 10)
-      const userData = request.body
-
-      if (isNaN(id)) {
-        return reply.code(400).send(createErrorResponse('유효하지 않은 사용자 ID입니다.'))
-      }
-
-      const existingUser = await userService.getUserById(id)
-      if (!existingUser) {
-        return reply.code(404).send(createErrorResponse('사용자를 찾을 수 없습니다.'))
-      }
-
-      if (userData.email && userData.email !== existingUser.email) {
-        const emailExists = await userService.getUserByEmail(userData.email)
-        if (emailExists) {
-          return reply.code(409).send(createErrorResponse('이미 사용 중인 이메일입니다.'))
+      return reply.code(200).send({
+        data: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
         }
-      }
-
-      const updatedUser = await userService.updateUser(id, userData)
-      return reply
-        .code(200)
-        .send(createSuccessResponse(updatedUser, '사용자 정보가 성공적으로 수정되었습니다.'))
+      });
     } catch (error) {
-      request.log.error(error)
-      return reply.code(500).send(createErrorResponse('사용자 정보 수정에 실패했습니다.'))
+      return reply.code(500).send({ error: 'Internal server error' });
     }
-  }
+  },
 
-  const deleteUser = async (
-    request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply
-  ) => {
+  async updateUser(request: FastifyRequest<{
+    Body: {
+      name?: string;
+      email?: string;
+      password?: string;
+    }
+  }>, reply: FastifyReply) {
     try {
-      const id = parseInt(request.params.id, 10)
-
-      if (isNaN(id)) {
-        return reply.code(400).send(createErrorResponse('유효하지 않은 사용자 ID입니다.'))
+      const userId = request.user?.id;
+      if (!userId) {
+        return reply.code(401).send({ error: 'Invalid token' });
       }
 
-      const existingUser = await userService.getUserById(id)
-      if (!existingUser) {
-        return reply.code(404).send(createErrorResponse('사용자를 찾을 수 없습니다.'))
-      }
-
-      const deleted = await userService.deleteUser(id)
-
-      if (!deleted) {
-        return reply.code(500).send(createErrorResponse('사용자 삭제에 실패했습니다.'))
-      }
-
-      return reply
-        .code(200)
-        .send(createSuccessResponse(null, '사용자가 성공적으로 삭제되었습니다.'))
+      const updatedUser = await userService.updateUser(userId, request.body);
+      return reply.code(200).send({
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name
+        }
+      });
     } catch (error) {
-      request.log.error(error)
-      return reply.code(500).send(createErrorResponse('사용자 삭제에 실패했습니다.'))
+      if (error instanceof Error) {
+        return reply.code(400).send({ error: error.message });
+      }
+      return reply.code(500).send({ error: 'Internal server error' });
     }
-  }
+  },
 
-  return {
-    getAllUsers,
-    getUserById,
-    createUser,
-    updateUser,
-    deleteUser
+  async deleteUser(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const userId = request.user?.id;
+      if (!userId) {
+        return reply.code(401).send({ error: 'Invalid token' });
+      }
+
+      await userService.deleteUser(userId);
+      return reply.code(204).send();
+    } catch (error) {
+      return reply.code(500).send({ error: 'Internal server error' });
+    }
   }
 }
 
-export type UserController = ReturnType<typeof createUserController>
+export type UserController = typeof userController

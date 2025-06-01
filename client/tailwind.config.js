@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -17,6 +18,24 @@ export default {
           900: '#0c4a6e',
           950: '#082f49'
         },
+        dark: {
+          100: '#0F172A',
+          200: '#1E293B',
+          300: '#334155',
+          400: '#475569',
+          500: '#64748B',
+          600: '#94A3B8',
+          700: '#CBD5E1',
+          800: '#E2E8F0',
+          900: '#F1F5F9',
+        },
+        accent: {
+          purple: '#8B5CF6',
+          blue: '#3B82F6',
+          teal: '#14B8A6',
+          pink: '#EC4899',
+          red: '#EF4444',
+        },
         neutral: {
           50: '#f9fafb',
           100: '#f3f4f6',
@@ -29,7 +48,23 @@ export default {
           800: '#1f2937',
           900: '#111827',
           950: '#030712'
-        }
+        },
+        'dark-100': '#181926',
+        'dark-200': '#23243a',
+        'dark-300': '#2d2e4a',
+        'dark-400': '#393a5a',
+        'accent-purple': '#a78bfa',
+        'accent-blue': '#60a5fa'
+      },
+      fontFamily: {
+        sans: ['Pretendard', 'sans-serif'],
+      },
+      boxShadow: {
+        'glow': '0 0 15px rgba(59, 130, 246, 0.5)',
+        'glow-purple': '0 0 15px rgba(139, 92, 246, 0.5)',
+      },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       }
     }
   },

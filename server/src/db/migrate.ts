@@ -2,13 +2,14 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import Database from 'better-sqlite3'
 import { mkdir } from 'fs/promises'
 import { dirname } from 'path'
-import env from '../config/env'
-import { users } from './schema'
+import { users, sleepRecords, sleepGoals } from './schema'
 import { UserRole } from '../types'
+
+const DATABASE_URL = './data/database.sqlite'
 
 // 데이터베이스 디렉토리 생성 함수
 async function ensureDatabaseDirectory() {
-  const dir = dirname(env.DATABASE_URL)
+  const dir = dirname(DATABASE_URL)
   try {
     await mkdir(dir, { recursive: true })
   } catch (error) {
@@ -24,6 +25,7 @@ const initialUsers = [
   {
     name: '관리자',
     email: 'admin@example.com',
+    password_hash: '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZGHFQW1Yy1Qy1Qy1Qy1Qy1Qy1Qy1q', // 'admin'
     role: UserRole.ADMIN,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -31,6 +33,7 @@ const initialUsers = [
   {
     name: '일반 사용자',
     email: 'user@example.com',
+    password_hash: '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZGHFQW1Yy1Qy1Qy1Qy1Qy1Qy1Qy1q', // 'admin'
     role: UserRole.USER,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -38,7 +41,16 @@ const initialUsers = [
   {
     name: '게스트',
     email: 'guest@example.com',
+    password_hash: '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZGHFQW1Yy1Qy1Qy1Qy1Qy1Qy1Qy1q', // 'admin'
     role: UserRole.GUEST,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    name: '테스트 사용자',
+    email: 'test@example.com',
+    password_hash: '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZGHFQW1Yy1Qy1Qy1Qy1Qy1Qy1Qy1q', // 'password123'
+    role: UserRole.USER,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
@@ -51,7 +63,7 @@ async function runMigration() {
     await ensureDatabaseDirectory()
 
     // 데이터베이스 연결
-    const sqlite = new Database(env.DATABASE_URL)
+    const sqlite = new Database(DATABASE_URL)
     const db = drizzle(sqlite)
 
     // 스키마 생성
@@ -63,9 +75,39 @@ async function runMigration() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'USER',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
+      )
+    `)
+
+    // sleep_records 테이블 생성
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS sleep_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        sleep_start TEXT NOT NULL,
+        sleep_end TEXT NOT NULL,
+        sleep_quality INTEGER NOT NULL CHECK (sleep_quality BETWEEN 1 AND 5),
+        notes TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `)
+
+    // sleep_goals 테이블 생성
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS sleep_goals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        bedtime_time TEXT NOT NULL,
+        wakeup_time TEXT NOT NULL,
+        target_sleep_quality INTEGER NOT NULL CHECK (target_sleep_quality BETWEEN 1 AND 5),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `)
 
@@ -73,9 +115,9 @@ async function runMigration() {
     console.log('초기 데이터 삽입 중...')
 
     // 기존 데이터 확인
-    const existingUsers = db.select().from(users)
+    const existingUsers = await db.select().from(users)
 
-    if ((await existingUsers).length === 0) {
+    if (existingUsers.length === 0) {
       // 초기 사용자 데이터 삽입
       for (const user of initialUsers) {
         await db.insert(users).values(user)
