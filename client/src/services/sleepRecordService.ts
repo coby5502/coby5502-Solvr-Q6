@@ -6,18 +6,18 @@ import {
   SleepStats,
   WeeklySleepPattern,
   MonthlySleepPattern,
-} from '../types/sleep'
+} from '../types/sleepRecord'
 
 export const sleepRecordService = {
   // 수면 기록 목록 조회
   async getRecords(): Promise<{ data: SleepRecord[] }> {
-    const response = await api.get<{ data: SleepRecord[] }>(`/sleep-records`)
+    const response = await api.get<{ data: SleepRecord[] }>('/sleep-records')
     return response.data
   },
 
   // 수면 기록 상세 조회
   async getRecord(recordId: number): Promise<{ data: SleepRecord }> {
-    const response = await api.get<{ data: SleepRecord }>(`/sleep-records/record/${recordId}`)
+    const response = await api.get<{ data: SleepRecord }>(`/sleep-records/${recordId}`)
     return response.data
   },
 
@@ -28,14 +28,15 @@ export const sleepRecordService = {
   },
 
   // 수면 기록 수정
-  async updateRecord(recordId: number, data: UpdateSleepRecordDTO): Promise<{ data: SleepRecord }> {
-    const response = await api.put<{ data: SleepRecord }>(`/sleep-records/${recordId}`, data)
+  async updateRecord(id: number, data: UpdateSleepRecordDTO): Promise<{ data: SleepRecord }> {
+    const response = await api.put<{ data: SleepRecord }>(`/sleep-records/${id}`, data)
     return response.data
   },
 
   // 수면 기록 삭제
-  async deleteRecord(recordId: number): Promise<void> {
-    await api.delete(`/sleep-records/${recordId}`)
+  async deleteRecord(id: number): Promise<{ success: boolean }> {
+    const response = await api.delete<{ success: boolean }>(`/sleep-records/${id}`)
+    return response.data
   },
 
   // 최근 수면 기록 조회
@@ -48,19 +49,19 @@ export const sleepRecordService = {
 
   // 수면 통계 조회
   async getStats(userId: number): Promise<{ data: SleepStats }> {
-    const response = await api.get<{ data: SleepStats }>(`/sleep-records/stats/${userId}`)
+    const response = await api.get<{ data: SleepStats }>(`/sleep-records/${userId}/stats`)
     return response.data
   },
 
   // 주간 수면 패턴 조회
   async getWeeklyPattern(userId: number): Promise<{ data: WeeklySleepPattern[] }> {
-    const response = await api.get<{ data: WeeklySleepPattern[] }>(`/sleep-records/weekly-pattern/${userId}`)
+    const response = await api.get<{ data: WeeklySleepPattern[] }>(`/sleep-records/${userId}/weekly-pattern`)
     return response.data
   },
 
   // 월간 수면 패턴 조회
   async getMonthlyPattern(userId: number): Promise<{ data: MonthlySleepPattern[] }> {
-    const response = await api.get<{ data: MonthlySleepPattern[] }>(`/sleep-records/monthly-pattern/${userId}`)
+    const response = await api.get<{ data: MonthlySleepPattern[] }>(`/sleep-records/${userId}/monthly-pattern`)
     return response.data
   },
 

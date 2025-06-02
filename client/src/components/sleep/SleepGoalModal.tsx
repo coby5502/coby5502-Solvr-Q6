@@ -56,8 +56,8 @@ const SleepGoalModal: React.FC<SleepGoalModalProps> = ({ onClose, onSuccess, use
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-      <div className="bg-dark-300 rounded-lg p-8 w-full max-w-md shadow-lg relative">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-60">
+      <div className="bg-dark-300 rounded-lg p-8 w-full max-w-md shadow-lg relative px-4 sm:px-8 mx-2">
         <button
           className="absolute top-3 right-3 text-gray-400 hover:text-white"
           onClick={onClose}

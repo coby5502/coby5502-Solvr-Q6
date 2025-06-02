@@ -1,9 +1,8 @@
 export interface SleepRecord {
   id: number
   userId: number
-  startTime: string
-  endTime: string
-  sleepDuration: number
+  sleepStart: string
+  sleepEnd: string
   sleepQuality: number
   notes?: string
   createdAt: string
@@ -12,17 +11,15 @@ export interface SleepRecord {
 
 export interface CreateSleepRecordDTO {
   userId: number
-  startTime: string
-  endTime: string
-  sleepDuration: number
+  sleepStart: string
+  sleepEnd: string
   sleepQuality: number
   notes?: string
 }
 
 export interface UpdateSleepRecordDTO {
-  startTime?: string
-  endTime?: string
-  sleepDuration?: number
+  sleepStart?: string
+  sleepEnd?: string
   sleepQuality?: number
   notes?: string
 }

@@ -171,12 +171,22 @@ export const createSleepRecordService = ({ db }: SleepRecordServiceDeps) => {
     }));
   }
 
-  const getRecentRecords = async (userId: number, limit: number = 3): Promise<SleepRecord[]> => {
-    const records = await db.select().from(sleepRecords)
-      .where(eq(sleepRecords.userId, userId))
-      .orderBy(desc(sleepRecords.sleepStart))
-      .limit(limit)
-    return records.map(r => ({ ...r, notes: r.notes === null ? undefined : r.notes }))
+  const getRecentRecords = async (userId: number, limit: number = 7): Promise<SleepRecord[]> => {
+    try {
+      const records = await db.select()
+        .from(sleepRecords)
+        .where(eq(sleepRecords.userId, userId))
+        .orderBy(desc(sleepRecords.sleepStart))
+        .limit(limit);
+      
+      return records.map(r => ({ 
+        ...r, 
+        notes: r.notes === null ? undefined : r.notes 
+      }));
+    } catch (error) {
+      console.error('Error in getRecentRecords:', error);
+      throw error;
+    }
   }
 
   return {

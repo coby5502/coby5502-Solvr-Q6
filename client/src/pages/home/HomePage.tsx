@@ -3,30 +3,56 @@ import { useAuth } from '../../contexts/AuthContext'
 import { sleepGoalService } from '../../services/sleepGoalService'
 import { sleepRecordService } from '../../services/sleepRecordService'
 import { SleepGoal } from '../../types/sleepGoal'
+import { SleepRecord, SleepStats } from '../../types/sleepRecord'
 import { Link } from 'react-router-dom'
 import SleepGoalModal from '../../components/sleep/SleepGoalModal'
+import SleepRecordModal from '../../components/sleep/SleepRecordModal'
+import { motion } from 'framer-motion'
 
 const HomePage: React.FC = () => {
   const { user } = useAuth()
   const [activeGoal, setActiveGoal] = useState<SleepGoal | null>(null)
-  const [recentRecords, setRecentRecords] = useState<any[]>([])
-  const [stats, setStats] = useState<any>(null)
+  const [recentRecords, setRecentRecords] = useState<SleepRecord[]>([])
+  const [stats, setStats] = useState<SleepStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false)
+  const [error, setError] = useState('')
 
   const fetchData = async () => {
-    if (!user) return
     try {
-      const [goalResponse, recordsResponse, statsResponse] = await Promise.all([
+      if (!user?.id) {
+        console.error('User ID is not available');
+        return;
+      }
+
+      const [goalsResponse, recordsResponse, statsResponse] = await Promise.all([
         sleepGoalService.getGoals(user.id),
-        sleepRecordService.getRecentRecords(user.id, 3),
+        sleepRecordService.getRecentRecords(user.id, 7),
         sleepRecordService.getStats(user.id)
-      ])
-      setActiveGoal(goalResponse.data[0] || null)
-      setRecentRecords(recordsResponse.data)
-      setStats(statsResponse.data)
+      ]);
+
+      setActiveGoal(goalsResponse.data[0] || null)
+      setRecentRecords(recordsResponse.data || [])
+      setStats(statsResponse.data || {
+        averageSleepDuration: 0,
+        averageSleepQuality: 0,
+        consistencyScore: 0,
+        bestSleepQuality: 0,
+        worstSleepQuality: 0
+      })
     } catch (error) {
       console.error('Error fetching home data:', error)
+      setError('데이터를 불러오지 못했습니다.')
+      setActiveGoal(null)
+      setRecentRecords([])
+      setStats({
+        averageSleepDuration: 0,
+        averageSleepQuality: 0,
+        consistencyScore: 0,
+        bestSleepQuality: 0,
+        worstSleepQuality: 0
+      })
     } finally {
       setIsLoading(false)
     }
@@ -36,10 +62,26 @@ const HomePage: React.FC = () => {
     fetchData()
   }, [user])
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-dark-200 text-white p-6">
+        <div className="text-white">로그인이 필요합니다.</div>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-dark-200 text-white p-6">
         <div className="text-white">로딩 중...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-dark-200 text-white p-6">
+        <div className="text-red-400">{error}</div>
       </div>
     )
   }
@@ -79,7 +121,7 @@ const HomePage: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">목표 수면 품질</span>
-              <span className="text-white">{activeGoal.targetSleepQuality}/5</span>
+              <span className="text-white">{activeGoal.targetSleepQuality}점</span>
             </div>
           </div>
         ) : (
@@ -95,56 +137,45 @@ const HomePage: React.FC = () => {
         )}
       </section>
 
-      {/* Recent Sleep Records */}
-      <section className="bg-dark-300 rounded-lg p-6">
+      {/* 최근 수면 기록 */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-dark-300 rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-white">최근 수면 기록</h2>
-          <Link
-            to="/records"
+          <h2 className="text-lg font-semibold">최근 수면 기록</h2>
+          <button
+            onClick={() => setIsRecordModalOpen(true)}
             className="text-accent-purple hover:text-accent-purple/90 text-sm"
           >
-            전체 보기
-          </Link>
+            기록 작성하기
+          </button>
         </div>
         {recentRecords.length > 0 ? (
-          <div className="space-y-4">
-            {recentRecords.map((record) => (
-              <div key={record.id} className="bg-dark-300 rounded-lg p-4 border border-dark-400">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-400">
-                    {new Date(record.sleepStart).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </span>
-                  <span className="text-white">품질: {record.sleepQuality}/5</span>
+          <div className="space-y-2">
+            {recentRecords.map((rec) => (
+              <div key={rec.id} className="flex justify-between items-center border-b border-dark-400 py-2">
+                <div>
+                  <div className="text-white font-bold">
+                    {new Date(rec.sleepStart).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                  <div className="text-gray-400 text-sm">
+                    {new Date(rec.sleepStart).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} ~ {new Date(rec.sleepEnd).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">
-                    {new Date(record.sleepStart).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} -{' '}
-                    {new Date(record.sleepEnd).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                  <span className="text-white">
-                    {Math.round(
-                      (new Date(record.sleepEnd).getTime() -
-                        new Date(record.sleepStart).getTime()) /
-                        (1000 * 60 * 60)
-                    )}
-                    시간
-                  </span>
-                </div>
+                <div className="text-accent-purple font-bold">{rec.sleepQuality}점</div>
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-400 mb-4">아직 수면 기록이 없습니다.</p>
-            <Link
-              to="/records"
+            <button
+              onClick={() => setIsRecordModalOpen(true)}
               className="inline-block bg-accent-purple text-white px-4 py-2 rounded-lg hover:bg-accent-purple/90"
             >
-              기록하기
-            </Link>
+              기록 작성하기
+            </button>
           </div>
         )}
-      </section>
+      </motion.div>
 
       {/* Sleep Stats Summary */}
       {stats && (
@@ -154,19 +185,19 @@ const HomePage: React.FC = () => {
             <div className="bg-dark-400 rounded-lg p-4">
               <h3 className="text-gray-400 text-sm mb-1">평균 수면 시간</h3>
               <p className="text-2xl font-bold text-white">
-                {stats.avgSleepTime.toFixed(1)}시간
+                {stats?.averageSleepDuration?.toFixed(1) || '0.0'}시간
               </p>
             </div>
             <div className="bg-dark-400 rounded-lg p-4">
               <h3 className="text-gray-400 text-sm mb-1">평균 수면 품질</h3>
               <p className="text-2xl font-bold text-white">
-                {stats.avgSleepQuality.toFixed(1)}/5
+                {stats?.averageSleepQuality?.toFixed(1) || '0.0'}/5
               </p>
             </div>
             <div className="bg-dark-400 rounded-lg p-4">
               <h3 className="text-gray-400 text-sm mb-1">기록 수</h3>
               <p className="text-2xl font-bold text-white">
-                {stats.totalRecords}회
+                {stats?.consistencyScore || 0}회
               </p>
             </div>
           </div>
@@ -175,12 +206,20 @@ const HomePage: React.FC = () => {
 
       {isGoalModalOpen && (
         <SleepGoalModal
-          userId={user!.id}
+          userId={user.id}
           initialBedtimeTime={activeGoal?.bedtimeTime}
           initialWakeupTime={activeGoal?.wakeupTime}
           initialTargetSleepQuality={activeGoal?.targetSleepQuality}
           onClose={() => setIsGoalModalOpen(false)}
           onSuccess={() => { setIsGoalModalOpen(false); fetchData(); }}
+        />
+      )}
+
+      {isRecordModalOpen && (
+        <SleepRecordModal
+          open={isRecordModalOpen}
+          onClose={() => setIsRecordModalOpen(false)}
+          onSuccess={() => { setIsRecordModalOpen(false); fetchData(); }}
         />
       )}
     </div>

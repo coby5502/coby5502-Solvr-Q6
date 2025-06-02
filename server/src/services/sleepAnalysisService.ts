@@ -1,5 +1,5 @@
 import { eq, and, sql } from 'drizzle-orm'
-import { sleepRecords, sleepEnvironment } from '../db/schema'
+import { sleepRecords } from '../db/schema'
 import { Database } from '../types/database'
 import { SleepPattern, SleepRecommendation, SleepAnalysis, WeeklySleepPattern, MonthlySleepPattern } from '../types/sleepAnalysis'
 import { db } from '../db'

@@ -44,11 +44,9 @@ const SleepRecordPage: React.FC = () => {
     fetchRecords()
   }
 
-  // 깔끔한 SVG 휴지통 아이콘 컴포넌트
-  const TrashIcon = () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 20 20" className="w-5 h-5" aria-hidden="true">
-      <path d="M7.5 8.5v5m5-5v5M3 5.5h14M8.5 3.5h3A1.5 1.5 0 0 1 13 5v0.5h-6V5A1.5 1.5 0 0 1 8.5 3.5zM5 5.5v10A1.5 1.5 0 0 0 6.5 17h7A1.5 1.5 0 0 0 15 15.5v-10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+  // 삭제 텍스트 버튼 컴포넌트
+  const DeleteTextButton = () => (
+    <span className="text-red-400 hover:bg-red-500/80 hover:text-white px-3 py-1 rounded transition text-sm font-semibold">삭제</span>
   )
 
   if (loading) {
@@ -83,38 +81,40 @@ const SleepRecordPage: React.FC = () => {
         />
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {records.map((record) => (
           <motion.div
             key={record.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="relative bg-dark-300 rounded-xl p-5 shadow border border-dark-400 flex flex-col gap-3 cursor-pointer hover:shadow-lg hover:bg-dark-200 transition"
+            className="relative bg-dark-300 rounded-xl p-4 shadow border border-dark-400 flex flex-col gap-2 cursor-pointer hover:shadow-lg hover:bg-dark-200 transition"
             onClick={() => handleEdit(record)}
           >
             <button
               onClick={e => { e.stopPropagation(); handleDelete(record.id); }}
-              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-red-400 bg-transparent hover:bg-red-500/80 hover:text-white shadow transition"
+              className="absolute top-3 right-3 text-red-400 bg-transparent hover:underline text-sm font-semibold px-1 py-0.5"
               title="삭제"
             >
-              <TrashIcon />
+              삭제
             </button>
-            <div className="flex items-center mb-1">
+            <div className="flex items-center mb-0.5">
               <span className="text-gray-200 text-base font-semibold">
                 {new Date(record.sleepStart).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
               </span>
             </div>
-            <div className="flex flex-row items-center gap-4 mb-1">
-              <span className="text-gray-100 text-sm">
-                {new Date(record.sleepStart).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - {new Date(record.sleepEnd).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-              <span className="text-white text-sm font-medium">
-                {Math.round((new Date(record.sleepEnd).getTime() - new Date(record.sleepStart).getTime()) / (1000 * 60 * 60))}시간
-              </span>
-              <span className="text-accent-purple text-sm font-semibold ml-auto">품질 {record.sleepQuality}/5</span>
+            <div className="flex flex-row items-center text-sm text-gray-100 mb-0.5 flex-wrap">
+              <div className="flex flex-row items-center gap-2">
+                <span>
+                  {new Date(record.sleepStart).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - {new Date(record.sleepEnd).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span className="text-white font-medium">
+                  {Math.round((new Date(record.sleepEnd).getTime() - new Date(record.sleepStart).getTime()) / (1000 * 60 * 60))}시간
+                </span>
+              </div>
+              <span className="ml-auto text-accent-purple font-semibold">품질 {record.sleepQuality}점</span>
             </div>
             {record.notes && (
-              <div className="bg-dark-400 rounded p-3 mt-3">
+              <div className="bg-dark-400 rounded p-2 mt-2">
                 <span className="text-gray-400 text-xs">메모</span>
                 <p className="text-white mt-1 text-sm">{record.notes}</p>
               </div>

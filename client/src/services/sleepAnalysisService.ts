@@ -1,6 +1,6 @@
 import { api } from '../utils/api'
 import { SleepAnalysis, EnvironmentImpact, SleepRecommendation } from '../types/sleepAnalysis'
-import { WeeklySleepPattern, MonthlySleepPattern } from '../types/sleep'
+import { WeeklySleepPattern, MonthlySleepPattern, SleepStats } from '../types/sleepRecord'
 
 export const sleepAnalysisService = {
   // 수면 분석 데이터 조회
@@ -16,14 +16,14 @@ export const sleepAnalysisService = {
   },
 
   // 주간 수면 패턴 조회
-  async getWeeklyPattern(): Promise<{ data: any }> {
-    const response = await api.get<{ data: any }>('/sleep-analysis/weekly')
+  async getWeeklyPattern(): Promise<{ data: WeeklySleepPattern[] }> {
+    const response = await api.get<{ data: WeeklySleepPattern[] }>('/sleep-analysis/weekly')
     return response.data
   },
 
   // 월간 수면 패턴 조회
-  async getMonthlyPattern(): Promise<{ data: any }> {
-    const response = await api.get<{ data: any }>('/sleep-analysis/monthly')
+  async getMonthlyPattern(): Promise<{ data: MonthlySleepPattern[] }> {
+    const response = await api.get<{ data: MonthlySleepPattern[] }>('/sleep-analysis/monthly')
     return response.data
   },
 
@@ -52,8 +52,8 @@ export const sleepAnalysisService = {
   },
 
   // 수면 통계 조회
-  async getStats(userId: number): Promise<SleepStats> {
-    const response = await api.get<SleepStats>(`/sleep-analysis/${userId}/stats`)
+  async getStats(userId: number): Promise<{ data: SleepStats }> {
+    const response = await api.get<{ data: SleepStats }>(`/sleep-analysis/${userId}/stats`)
     return response.data
   }
 } 
