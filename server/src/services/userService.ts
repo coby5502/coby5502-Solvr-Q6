@@ -1,37 +1,35 @@
 // server/src/services/userService.ts
 import { eq } from 'drizzle-orm'
 import { users } from '../db/schema'
-import { CreateUserDto, UpdateUserDto, User, UserRole } from '../types'
-import { Database } from '../types/database'
 import bcrypt from 'bcrypt'
 import { db } from '../db'
 
 type UserServiceDeps = {
-  db: Database
+  db: any
 }
 
-const mapDbUserToUser = (dbUser: any): User => ({
+const mapDbUserToUser = (dbUser: any): any => ({
   ...dbUser,
-  role: dbUser.role as UserRole
+  role: dbUser.role
 })
 
 export const createUserService = ({ db }: UserServiceDeps) => {
-  const getAllUsers = async (): Promise<User[]> => {
+  const getAllUsers = async (): Promise<any[]> => {
     const results = await db.select().from(users)
     return results.map(mapDbUserToUser)
   }
 
-  const getUserById = async (id: number): Promise<User | null> => {
+  const getUserById = async (id: number): Promise<any | null> => {
     const [result] = await db.select().from(users).where(eq(users.id, id))
     return result ? mapDbUserToUser(result) : null
   }
 
-  const getUserByEmail = async (email: string): Promise<User | null> => {
+  const getUserByEmail = async (email: string): Promise<any | null> => {
     const [result] = await db.select().from(users).where(eq(users.email, email))
     return result ? mapDbUserToUser(result) : null
   }
 
-  const createUser = async (data: CreateUserDto): Promise<User> => {
+  const createUser = async (data: any): Promise<any> => {
     const { email, password, name } = data
     const password_hash = await bcrypt.hash(password, 10)
     const now = new Date().toISOString()
@@ -51,7 +49,7 @@ export const createUserService = ({ db }: UserServiceDeps) => {
     return mapDbUserToUser(user)
   }
 
-  const updateUser = async (id: number, data: UpdateUserDto): Promise<User> => {
+  const updateUser = async (id: number, data: any): Promise<any> => {
     const updates: any = {}
     if (data.email) updates.email = data.email
     if (data.password) updates.password_hash = await bcrypt.hash(data.password, 10)
@@ -71,7 +69,7 @@ export const createUserService = ({ db }: UserServiceDeps) => {
     await db.delete(users).where(eq(users.id, id))
   }
 
-  const validateUser = async (email: string, password: string): Promise<User> => {
+  const validateUser = async (email: string, password: string): Promise<any> => {
     const user = await getUserByEmail(email)
     if (!user) {
       throw new Error('Invalid email or password')

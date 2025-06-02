@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { sleepRecordService } from '../../services/sleepRecordService'
 import { sleepGoalService } from '../../services/sleepGoalService'
 import { motion } from 'framer-motion'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, ReferenceLine } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { sleepAnalysisService } from '../../services/sleepAnalysisService'
 
 interface SleepRecord {
@@ -32,6 +32,7 @@ const SleepAnalysisPage: React.FC = () => {
   useEffect(() => {
     if (!user) return
     fetchData()
+    setInsight('AI가 수면 기록을 분석하고 있어요...')
     const fetchInsight = async () => {
       try {
         const result = await sleepAnalysisService.getInsight();

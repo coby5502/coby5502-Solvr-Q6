@@ -1,17 +1,20 @@
 import { eq, sql } from 'drizzle-orm'
 import { sleepRecords } from '../db/schema'
-import { Database } from '../types/database'
 import { db } from '../db'
+import { GoogleGenAI } from '@google/genai'
 
 type SleepAnalysisServiceDeps = {
-  db: Database
+  db: any
 }
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 export const createSleepAnalysisService = ({ db }: SleepAnalysisServiceDeps) => {
   // 수면 인사이트(멘트) 생성 함수
   const getInsight = async (userId: number): Promise<string> => {
     // 최근 7개 기록 가져오기 (최신순)
-    const records = await db.select()
+    const records: any[] = await db.select()
       .from(sleepRecords)
       .where(eq(sleepRecords.userId, userId))
       .orderBy(sql`${sleepRecords.sleepStart} DESC`)
@@ -19,52 +22,58 @@ export const createSleepAnalysisService = ({ db }: SleepAnalysisServiceDeps) => 
 
     if (records.length === 0) return '최근 수면 기록이 없습니다. 기록을 추가해보세요!';
 
-    // 평균값
-    const avgDur = records.reduce((sum, r) => sum + ((new Date(r.sleepEnd).getTime() - new Date(r.sleepStart).getTime()) / (1000 * 60 * 60)), 0) / records.length;
-    const avgQual = records.reduce((sum, r) => sum + r.sleepQuality, 0) / records.length;
+    // 최근 기록 요약
+    const sleepSummaries = records.map((r: any) => {
+      const sleepStart = new Date(r.sleepStart);
+      const sleepEnd = new Date(r.sleepEnd);
+      const duration = ((sleepEnd.getTime() - sleepStart.getTime()) / (1000 * 60 * 60)).toFixed(1);
+      return `날짜: ${sleepStart.toLocaleDateString('ko-KR')}, 취침: ${sleepStart.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}, 기상: ${sleepEnd.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}, 수면시간: ${duration}시간, 수면품질: ${r.sleepQuality}점`;
+    }).join('\n');
 
-    // 최근 2~3일 데이터
-    const recentN = Math.min(3, records.length);
-    const lastRecords = records.slice(0, recentN);
-    const lastAvgDur = lastRecords.reduce((sum, r) => sum + ((new Date(r.sleepEnd).getTime() - new Date(r.sleepStart).getTime()) / (1000 * 60 * 60)), 0) / recentN;
-    const lastAvgQual = lastRecords.reduce((sum, r) => sum + r.sleepQuality, 0) / recentN;
+    // 프롬프트 생성
+    const prompt = `아래는 한 사용자의 최근 7일 수면 기록입니다. 취침시간, 기상시간, 수면시간, 수면품질을 모두 고려해서, 한국어로 딱 한 문장, 30자 이내로, 아무 스타일 없이 실질적인 수면 팁이나 인사이트를 짧게 말해줘.\n\n${sleepSummaries}`;
 
-    // 상황별 멘트
-    if (lastAvgDur < 6 && lastAvgQual < 3) {
-      return '최근 며칠간 수면 시간과 품질이 모두 부족해요. 일찍 잠자리에 들고, 자기 전 휴대폰 사용을 줄여보세요.';
+    try {
+      if (!GEMINI_API_KEY) {
+        console.error('GEMINI_API_KEY is not set');
+        return 'AI 기반 인사이트 생성에 실패했습니다. API 키가 설정되지 않았습니다.';
+      }
+
+      const config = { responseMimeType: 'text/plain' };
+      const model = 'gemma-3-1b-it';
+      const contents = [
+        {
+          role: 'user',
+          parts: [{ text: prompt }],
+        },
+      ];
+
+      const response = await ai.models.generateContentStream({
+        model,
+        config,
+        contents,
+      });
+
+      let result = '';
+      for await (const chunk of response) {
+        if (typeof chunk.text === 'string') {
+          result += chunk.text;
+        }
+      }
+
+      if (!result) {
+        console.error('No text content in Gemini API response');
+        return '수면 기록을 기반으로 한 인사이트를 생성하지 못했습니다.';
+      }
+
+      return result.trim();
+    } catch (e) {
+      console.error('Error in getInsight:', e);
+      if (e instanceof Error) {
+        console.error('Error details:', e.message);
+      }
+      return 'AI 기반 인사이트 생성에 실패했습니다. 나중에 다시 시도해 주세요.';
     }
-    if (lastAvgDur < 6 && lastAvgQual >= 3) {
-      return '최근 수면 시간이 부족하지만 품질은 나쁘지 않아요. 조금만 더 일찍 자면 더 좋은 컨디션을 기대할 수 있어요!';
-    }
-    if (lastAvgDur >= 6 && lastAvgDur < 7.5 && lastAvgQual < 3) {
-      return '수면 시간은 평균에 가깝지만 품질이 낮아요. 자기 전 카페인, 스마트폰 사용을 줄여보세요.';
-    }
-    if (lastAvgDur >= 7.5 && lastAvgDur <= 9 && lastAvgQual >= 4) {
-      return '최근 수면 시간과 품질 모두 훌륭해요! 지금처럼 꾸준히 관리해보세요.';
-    }
-    if (lastAvgDur > 9 && lastAvgQual < 3) {
-      return '수면 시간이 길지만 품질이 낮아요. 깊은 잠을 방해하는 요인이 있는지 점검해보세요.';
-    }
-    if (lastAvgDur > 9 && lastAvgQual >= 3) {
-      return '수면 시간이 다소 긴 편이에요. 너무 오래 자면 오히려 피로할 수 있으니 적당한 수면을 유지해보세요.';
-    }
-    if (lastAvgDur >= 6 && lastAvgDur < 7.5 && lastAvgQual >= 3) {
-      return '수면 시간과 품질이 평균에 가까워요. 규칙적인 생활을 유지하면 더 좋은 결과를 얻을 수 있어요!';
-    }
-    // 최근 급격한 변화
-    if (lastAvgDur < avgDur - 1) {
-      return '최근 수면 시간이 평소보다 줄었어요. 피로가 쌓이지 않도록 주의하세요.';
-    }
-    if (lastAvgDur > avgDur + 1) {
-      return '최근 수면 시간이 평소보다 늘었어요. 몸이 필요로 하는 휴식일 수 있으니 컨디션을 체크해보세요.';
-    }
-    if (lastAvgQual < avgQual - 1) {
-      return '최근 수면 품질이 평소보다 떨어졌어요. 스트레스나 환경 변화를 점검해보세요.';
-    }
-    if (lastAvgQual > avgQual + 1) {
-      return '최근 수면 품질이 평소보다 좋아졌어요! 좋은 습관을 계속 유지해보세요.';
-    }
-    return '수면 패턴이 비교적 안정적이에요. 꾸준히 기록하며 건강한 수면 습관을 이어가세요!';
   };
 
   return {

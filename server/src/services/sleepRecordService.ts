@@ -1,17 +1,16 @@
 import { eq, and, desc, sql } from 'drizzle-orm'
 import { sleepRecords } from '../db/schema'
 import { SleepRecord, CreateSleepRecordDTO, UpdateSleepRecordDTO, SleepStats, WeeklySleepPattern, MonthlySleepPattern, GetRecordsOptions } from '../types/sleepRecord'
-import { Database } from '../types/database'
 import { db } from '../db'
 
 type SleepRecordServiceDeps = {
-  db: Database
+  db: any
 }
 
 export const createSleepRecordService = ({ db }: SleepRecordServiceDeps) => {
   const getAllSleepRecords = async (userId: number): Promise<SleepRecord[]> => {
     const rows = await db.select().from(sleepRecords).where(eq(sleepRecords.userId, userId)).orderBy(desc(sleepRecords.sleepStart))
-    return rows.map(r => ({ ...r, notes: r.notes === null ? undefined : r.notes }))
+    return rows.map((r: any) => ({ ...r, notes: r.notes === null ? undefined : r.notes }))
   }
 
   const getSleepRecordById = async (id: number): Promise<SleepRecord | null> => {
@@ -71,7 +70,7 @@ export const createSleepRecordService = ({ db }: SleepRecordServiceDeps) => {
       .where(eq(sleepRecords.userId, userId))
       .orderBy(desc(sleepRecords.sleepStart))
       .limit(7)
-    const weeklyPattern = weeklyRows.map(r => ({
+    const weeklyPattern = weeklyRows.map((r: any) => ({
       day: r.sleepStart.slice(0, 10),
       avgSleepTime: (new Date(r.sleepEnd).getTime() - new Date(r.sleepStart).getTime()) / (1000 * 60 * 60),
       avgSleepQuality: r.sleepQuality
@@ -165,7 +164,7 @@ export const createSleepRecordService = ({ db }: SleepRecordServiceDeps) => {
       .limit(limit ?? 100)
       .offset(offset ?? 0);
 
-    return records.map(r => ({
+    return records.map((r: any) => ({
       ...r,
       notes: r.notes === null ? undefined : r.notes
     }));
@@ -179,7 +178,7 @@ export const createSleepRecordService = ({ db }: SleepRecordServiceDeps) => {
         .orderBy(desc(sleepRecords.sleepStart))
         .limit(limit);
       
-      return records.map(r => ({ 
+      return records.map((r: any) => ({ 
         ...r, 
         notes: r.notes === null ? undefined : r.notes 
       }));

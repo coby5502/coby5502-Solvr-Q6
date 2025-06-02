@@ -1,11 +1,10 @@
 import { eq } from 'drizzle-orm'
 import { sleepGoals } from '../db/schema'
 import { SleepGoal, CreateSleepGoalDTO, UpdateSleepGoalDTO } from '../types/sleepGoal'
-import { Database } from '../types/database'
 import { db } from '../db'
 
 type SleepGoalServiceDeps = {
-  db: Database
+  db: any
 }
 
 export const createSleepGoalService = ({ db }: SleepGoalServiceDeps) => {
