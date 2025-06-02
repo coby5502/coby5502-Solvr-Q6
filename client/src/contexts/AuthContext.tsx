@@ -53,22 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth()
   }, [])
 
-  const fetchUser = async (userId: number) => {
-    try {
-      const response = await api.get<{ data: User }>(`/users/${userId}`)
-      setUser(response.data.data)
-      setIsAuthenticated(true)
-    } catch (error) {
-      console.error('Error fetching user:', error)
-      localStorage.removeItem('token')
-      localStorage.removeItem('userId')
-      setUser(null)
-      setIsAuthenticated(false)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const login = async (data: LoginDTO) => {
     try {
       setError(null)

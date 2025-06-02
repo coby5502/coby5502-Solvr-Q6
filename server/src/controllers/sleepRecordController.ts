@@ -1,18 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { SleepRecordService } from '../types/sleepRecord'
 import { sleepRecordService } from '../services/sleepRecordService'
-
-interface GetSleepRecordParams {
-  id: string
-}
-
-interface GetSleepRecordsQuery {
-  userId: string
-}
-
-type SleepRecordControllerDeps = {
-  sleepRecordService: SleepRecordService
-}
 
 export const sleepRecordController = {
   async getRecords(request: FastifyRequest<{

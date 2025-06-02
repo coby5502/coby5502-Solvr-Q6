@@ -3,7 +3,7 @@ import Database from 'better-sqlite3'
 import { mkdir } from 'fs/promises'
 import { dirname } from 'path'
 import { users, sleepRecords, sleepGoals } from './schema'
-import { UserRole } from '../types'
+import { UserRole } from '../types/user'
 
 const DATABASE_URL = './data/database.sqlite'
 

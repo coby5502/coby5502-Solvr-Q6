@@ -1,10 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { SleepGoalService } from '../types/sleepGoal';
 import { sleepGoalService } from '../services/sleepGoalService';
-
-type SleepGoalControllerDeps = {
-  sleepGoalService: SleepGoalService;
-};
 
 export const sleepGoalController = {
   async createGoal(request: FastifyRequest<{

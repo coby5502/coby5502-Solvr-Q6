@@ -1,4 +1,9 @@
-import { UserRole, CreateUserDto, UpdateUserDto } from './index'
+// 사용자 역할 Enum
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+  GUEST = 'GUEST'
+}
 
 export interface User {
   id: number
@@ -10,11 +15,51 @@ export interface User {
   updatedAt: string
 }
 
-export interface UserService {
-  getUserById(id: number): Promise<User | null>
-  getUserByEmail(email: string): Promise<User | null>
-  createUser(data: CreateUserDto): Promise<User>
-  updateUser(id: number, data: UpdateUserDto): Promise<User>
-  deleteUser(id: number): Promise<void>
-  validateUser(email: string, password: string): Promise<User>
-} 
+// 사용자 생성 DTO
+export interface CreateUserDto {
+  name: string
+  email: string
+  password: string
+  role?: UserRole
+}
+
+// 사용자 수정 DTO
+export interface UpdateUserDto {
+  name?: string
+  email?: string
+  password?: string
+  role?: UserRole
+}
+
+export interface LoginDto {
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  user: {
+    id: number
+    name: string
+    email: string
+    role: UserRole
+    createdAt: string
+    updatedAt: string
+  }
+  token: string
+}
+
+// API 응답 타입
+export interface ApiResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+// 페이지네이션 응답 타입
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}

@@ -59,15 +59,3 @@ export interface GetRecordsOptions {
   limit?: number
   offset?: number
 }
-
-export interface SleepRecordService {
-  getRecords(userId: number, options?: GetRecordsOptions): Promise<SleepRecord[]>
-  getSleepRecordById(id: number): Promise<SleepRecord | null>
-  createSleepRecord(data: CreateSleepRecordDTO): Promise<SleepRecord>
-  updateSleepRecord(id: number, data: UpdateSleepRecordDTO): Promise<SleepRecord>
-  deleteSleepRecord(id: number): Promise<void>
-  getSleepStats(userId: number): Promise<SleepStats>
-  getWeeklySleepPattern(userId: number): Promise<WeeklySleepPattern[]>
-  getMonthlySleepPattern(userId: number): Promise<MonthlySleepPattern[]>
-  getRecentRecords(userId: number, limit?: number): Promise<SleepRecord[]>
-} 

@@ -55,5 +55,11 @@ export const sleepAnalysisService = {
   async getStats(userId: number): Promise<{ data: SleepStats }> {
     const response = await api.get<{ data: SleepStats }>(`/sleep-analysis/${userId}/stats`)
     return response.data
+  },
+
+  // 수면 인사이트(멘트) 조회
+  async getInsight(): Promise<string> {
+    const response = await api.get<{ insight: string }>('/sleep-analysis/insight');
+    return response.data.insight;
   }
 } 

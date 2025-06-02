@@ -3,7 +3,6 @@ import Database from 'better-sqlite3'
 import { mkdir } from 'fs/promises'
 import { dirname } from 'path'
 import * as schema from './schema'
-import { Database as DrizzleDatabase } from '../types/database'
 import runMigration from './migrate'
 
 const DATABASE_URL = './data/database.sqlite'
@@ -22,13 +21,13 @@ async function ensureDatabaseDirectory() {
 }
 
 const sqlite = new Database(DATABASE_URL)
-export const db = drizzle(sqlite, { schema }) as DrizzleDatabase
+export const db = drizzle(sqlite, { schema })
 
-export async function getDb(): Promise<DrizzleDatabase> {
+export async function getDb(): Promise<typeof db> {
   return db
 }
 
-export async function initializeDatabase(): Promise<DrizzleDatabase> {
+export async function initializeDatabase(): Promise<typeof db> {
   await ensureDatabaseDirectory()
   await runMigration()
   return getDb()

@@ -44,11 +44,6 @@ const SleepRecordPage: React.FC = () => {
     fetchRecords()
   }
 
-  // 삭제 텍스트 버튼 컴포넌트
-  const DeleteTextButton = () => (
-    <span className="text-red-400 hover:bg-red-500/80 hover:text-white px-3 py-1 rounded transition text-sm font-semibold">삭제</span>
-  )
-
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-200 text-white p-6">
@@ -63,9 +58,9 @@ const SleepRecordPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-white">수면 기록</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-accent-purple text-white px-4 py-2 rounded-lg hover:bg-accent-purple/90 shadow"
+          className="bg-accent-purple text-white px-3 py-1.5 rounded-md hover:bg-accent-purple/90 shadow text-sm h-8 min-h-0"
         >
-          {showForm ? '취소' : '새 기록'}
+          새 기록
         </button>
       </div>
 
