@@ -43,7 +43,17 @@ pnpm dev:server
 - `DELETE /sleep-records/:id` : 수면 기록 삭제
 - `GET /sleep-goals/:userId` : 수면 목표 조회
 - `POST /sleep-goals` : 수면 목표 설정/수정
+- `GET /sleep-analysis/insight` : 맞춤형 추천 멘트(인사이트) 생성
 
 ---
 
 > Moon Night와 함께 더 나은 수면 습관을 만들어보세요!
+
+# Changelog
+
+## [최신 업데이트]
+
+- **분석(Analysis) 탭 개선**
+  - 수면 시간 추이, 수면 품질 추이 그래프(트렌드 차트) 추가
+  - 최근 수면 기록을 기반으로 한 맞춤형 추천 멘트(인사이트) 상단에 표시 (서버에서 동적으로 생성)
+  - 맞춤형 추천 멘트(인사이트) 생성을 위한 신규 API(`/sleep-analysis/insight`) 추가
