@@ -1,3 +1,8 @@
 packages:
-  - 'client'
-  - 'server'
+  - client
+  - server
+onlyBuiltDependencies:
+  - bcrypt
+  - better-sqlite3
+  - esbuild
+  - sqlite3

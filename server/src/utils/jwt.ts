@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import env from '../config/env';
-import { UserRole } from '../types';
+import { env } from '../config/env';
+import { UserRole } from '../types/user';
 
 interface TokenPayload {
   id: number;
@@ -21,4 +21,4 @@ export async function verifyToken(token: string): Promise<TokenPayload> {
       }
     });
   });
-} 
+}

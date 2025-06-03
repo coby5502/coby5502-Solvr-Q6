@@ -1,12 +1,10 @@
 import React, { ReactNode, useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
 import { 
   HomeIcon, 
   ChartBarIcon, 
   CalendarIcon,
   UserIcon,
-  Bars3Icon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import moonLogo from '../../assets/moon.svg'
@@ -16,7 +14,6 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
@@ -32,7 +29,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   }, [])
 
   const handleLogout = () => {
-    logout()
     navigate('/login')
   }
 

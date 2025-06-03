@@ -1,33 +1,21 @@
-import dotenv from 'dotenv'
 import path from 'path'
+import dotenv from 'dotenv'
 
-// .env 파일 로드 (dotenv-safe 사용)
-dotenv.config({
-  path: path.resolve(process.cwd(), '.env'),
-  example: path.resolve(process.cwd(), '.env.example'),
-  allowEmptyValues: true
+const config = dotenv.config({
+  path: path.resolve(process.cwd(), '.env')
 })
 
-// 환경 변수 타입 정의
-interface Env {
-  PORT: number
-  HOST: string
-  NODE_ENV: 'development' | 'production' | 'test'
-  DATABASE_URL: string
-  CORS_ORIGIN: string
-  LOG_LEVEL: string
-  JWT_SECRET: string
+if (config.error) {
+  throw new Error('Error loading .env file')
 }
 
-// 환경 변수 기본값 설정
-const env: Env = {
-  PORT: parseInt(process.env.PORT || '8000', 10),
+export const env = {
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  PORT: parseInt(process.env.PORT || '3000', 10),
   HOST: process.env.HOST || 'localhost',
-  NODE_ENV: (process.env.NODE_ENV as Env['NODE_ENV']) || 'development',
-  DATABASE_URL: process.env.DATABASE_URL || 'sqlite.db',
+  JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '1d',
+  DATABASE_URL: process.env.DATABASE_URL || 'sqlite:./data/database.sqlite',
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  LOG_LEVEL: process.env.LOG_LEVEL || 'info',
-  JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
+  LOG_LEVEL: process.env.LOG_LEVEL || 'info'
 }
-
-export default env

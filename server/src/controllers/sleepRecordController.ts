@@ -162,7 +162,7 @@ export const sleepRecordController = {
   }>, reply: FastifyReply) {
     try {
       const userId = parseInt(request.params.userId, 10);
-      const limit = parseInt(request.query.limit, 10) || 3;
+      const limit = parseInt(request.query.limit ?? '3', 10);
       if (isNaN(userId)) {
         return reply.code(400).send({ error: 'Invalid userId' });
       }

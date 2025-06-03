@@ -1,13 +1,13 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
-import env from './config/env'
+import { env } from './config/env'
 import { initializeDatabase, getDb } from './db'
 import runMigration from './db/migrate'
 import { createSleepRecordService } from './services/sleepRecordService'
 import { createUserService } from './services/userService'
 import { createSleepAnalysisService } from './services/sleepAnalysisService'
 import { createSleepGoalService } from './services/sleepGoalService'
-import { AppContext } from './types/context'
+import { User } from './types/user'
 
 // 각 도메인별 라우트 플러그인 import
 import healthRoutes from './api/healthRoutes'
@@ -15,6 +15,13 @@ import { userRoutes } from './api/userRoutes'
 import { sleepGoalRoutes } from './api/sleepGoalRoutes'
 import { sleepRecordRoutes } from './api/sleepRecordRoutes'
 import { sleepAnalysisRoutes } from './api/sleepAnalysisRoutes'
+
+interface AppContext {
+  sleepRecordService: ReturnType<typeof createSleepRecordService>
+  userService: ReturnType<typeof createUserService>
+  sleepAnalysisService: ReturnType<typeof createSleepAnalysisService>
+  sleepGoalService: ReturnType<typeof createSleepGoalService>
+}
 
 // Fastify 인스턴스 생성
 const fastify = Fastify({

@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { verifyToken } from '../utils/jwt'
-import { UserRole } from '../types'
+import { UserRole } from '../types/user'
 
 // Fastify의 Request 타입에 user 속성 추가
 declare module 'fastify' {

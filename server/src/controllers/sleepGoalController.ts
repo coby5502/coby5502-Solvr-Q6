@@ -90,4 +90,3 @@ export const sleepGoalController = {
 };
 
 export type SleepGoalController = typeof sleepGoalController; 
-export type SleepGoalController = typeof sleepGoalController; 
