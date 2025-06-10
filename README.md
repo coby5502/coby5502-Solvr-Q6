@@ -11,8 +11,8 @@
 
 ## 기술 스택
 - **Frontend**: React, Tailwind CSS, React Router, Vite
-- **Backend**: Node.js, Express
-- **Database**: PostgreSQL
+- **Backend**: Node.js, Fastify
+- **Database**: SQLite with DirzzleORM
 - **언어**: TypeScript
 
 ## 설치 및 실행
